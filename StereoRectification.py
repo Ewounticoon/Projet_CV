@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 cam0=np.array([
@@ -49,7 +50,7 @@ if img1 is None or img2 is None:
     exit(1)
 
 
-h, w = img1.shape[:2]
+h, w,_ = img1.shape
 
 # Dessiner les lignes épipolaires
 def draw_epipolar_lines(img, color=(0, 255, 0)):
@@ -63,10 +64,6 @@ def draw_epipolar_lines(img, color=(0, 255, 0)):
 img1_lines = draw_epipolar_lines(img1.copy())
 img2_lines = draw_epipolar_lines(img2.copy())
 
-cv2.imshow("Left Image - Epipolar Lines Before", img1_lines)
-cv2.imshow("Right Image - Epipolar Lines Before", img2_lines)
-
-cv2.waitKey(0)
 
 # Calculer la rectification : 
 # cv2.stereoRectify() est utilisée pour calculer les matrices permettant de rectifier les images stéréo. 
@@ -107,11 +104,18 @@ img2_rectified = cv2.remap(img2, map2x, map2y, cv2.INTER_LINEAR)
 img1_rectified_lines = draw_epipolar_lines(img1_rectified.copy(), color=(255, 0, 0))
 img2_rectified_lines = draw_epipolar_lines(img2_rectified.copy(), color=(255, 0, 0))
 
-cv2.imshow("Left Rectified - Epipolar Lines After", img1_rectified_lines)
-cv2.imshow("Right Rectified - Epipolar Lines After", img2_rectified_lines)
-
-# Afficher les images rectifiées
-#cv2.imshow("Left Rectified", img1_rectified)
-#v2.imshow("Right Rectified", img2_rectified)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# Affichage des images avant et après rectification
+plt.figure(figsize=(10, 5))
+plt.subplot(2, 2, 1)
+plt.imshow(img1, cmap='gray')
+plt.title("Image Gauche Originale")
+plt.subplot(2, 2, 2)
+plt.imshow(img2, cmap='gray')
+plt.title("Image Droite Originale")
+plt.subplot(2, 2, 3)
+plt.imshow(img1_rectified, cmap='gray')
+plt.title("Image Gauche Rectifiée")
+plt.subplot(2, 2, 4)
+plt.imshow(img2_rectified, cmap='gray')
+plt.title("Image Droite Rectifiée")
+plt.show()
