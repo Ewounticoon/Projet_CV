@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 # Matrices intrinsèques des caméras
 K1 = np.array([[1758.23, 0, 953.34], 
@@ -16,88 +18,89 @@ R1 = np.eye(3)  # Rotation identité pour la caméra 1
 R2 = np.eye(3)  # Supposons que la caméra 2 est aussi alignée
 
 # Vecteur translation (baseline le long de l'axe x)
-T = np.array([baseline, 0, 0]).reshape((3, 1))
+T = np.array([baseline, 0, 0])
 
-# Matrices de projection
-P1 = np.hstack((K1 @ R1, np.zeros((3, 1))))  # P1 = K1 * [I | 0]
-P2 = np.hstack((K2 @ R2, K2 @ T))            # P2 = K2 * [R | T]
+# Étape 1 : Définition du système de coordonnées rectifié
 
-# Fonction pour calculer le repère rectifié
-def compute_rectified_coordinate_system(P1, P2):
-    """
-    Calcule un repère rectifié à partir des matrices de projection des caméras.
-    """
-    # Extraction des centres optiques
-    C1 = -np.linalg.inv(P1[:, :3]) @ P1[:, 3]
-    C2 = -np.linalg.inv(P2[:, :3]) @ P2[:, 3]
-    
-    # Calcul de la baseline
-    baseline_vec = C2 - C1
-    x = baseline_vec / np.linalg.norm(baseline_vec)  # Normalisation
-    
-    # Récupération de l'axe optique d'origine (colonne 3 de P1)
-    z = P1[:, 2]
-    z = z / np.linalg.norm(z)  # Normalisation
-    
-    # Calcul du vecteur y
-    y = np.cross(z, x)
-    y = y / np.linalg.norm(y)
-    
-    # Recalcul de z pour assurer l'orthogonalité
-    z = np.cross(x, y)
-    
-    # Matrice de rotation rectifiée
-    R_rect = np.column_stack((x, y, z))
-    
+def rectified_coord_system():
+    # Axe X : Direction normalisée de la baseline
+    x_axis = T / np.linalg.norm(T)
+
+    # Axe Z : Même direction que l'axe optique initial
+    z_axis = np.array([0, 0, 1])
+
+    # Axe Y : Produit vectoriel pour garantir l'orthogonalité
+    y_axis = np.cross(z_axis, x_axis)
+
+    # Construction de la nouvelle matrice de rotation rectifiée
+    R_rect = np.column_stack((x_axis, y_axis, z_axis)) # Cette méthode permet de stack3 vecteurs pour former une matrice 3x3 avec les 3 vecteurs [ X Y Z ] 
     return R_rect
 
-# Fonction pour calculer les homographies
-def compute_homographies(K1, K2, R1, R2, R_rect):
-    """
-    Calcule les matrices d'homographie H1 et H2 pour rectifier les images.
-    """
+# Étape 2 : Calcul des homographies
+
+def compute_homographie(R_rect):
     H1 = K1 @ R_rect @ R1.T @ np.linalg.inv(K1)
     H2 = K2 @ R_rect @ R2.T @ np.linalg.inv(K2)
-    
-    return H1, H2
 
-# Fonction pour appliquer l'homographie sur une image
-def apply_homography(image, H):
-    """
-    Applique la transformation d'homographie sur une image.
-    """
-    height, width = image.shape[:2]  # Taille de l'image
-    rectified_image = cv2.warpPerspective(image, H, (width, height))  # Transformation correcte
-    
-    return rectified_image
+    return H1,H2
 
-# Charger les images stéréo
-img1 = cv2.imread('Projet_CV/chess1/im0.png', 1)
-img2 = cv2.imread('Projet_CV/chess1/im1.png', 1)
 
-# Vérification du chargement des images
-if img1 is None or img2 is None:
-    print("Erreur : Impossible de charger les images.")
-    exit(1)
+# Fonction pour appliquer la transformation homographique
+def warp_image(image, H, size):
+    return cv2.warpPerspective(image, H, size)
+ 
+# Cette méthode prend l'image qui est une grande matrice
+# Chaque case de la matrice est un pixel aux coordonnées x et y
+# On applique I' = H*I avec I les coordonnées homogène du pixel dans l'image de base et I' les coordonnées homogène du pixel dans l'image rectifié
+# On attribue la valeur du pixel de I au nouvelles coordonnées I'
+# On obtient une nouvelle image et rectifié
 
-cv2.imshow("Image 1 Originale", img1)
-cv2.imshow("Image 2 Originale", img2)
-cv2.waitKey(0)
+def main():
+    # Charger les images stéréo
+    img1 = cv2.imread('Projet_CV/chess1/im0.png', 1)
+    img2 = cv2.imread('Projet_CV/chess1/im1.png', 1)
 
-# Calcul du repère rectifié
-R_rect = compute_rectified_coordinate_system(P1, P2)
-print("R_rect:", R_rect)
 
-# Calcul des homographies
-H1, H2 = compute_homographies(K1, K2, R1, R2, R_rect)
-print("H1:", H1)
-print("H2:", H2)
+    # Vérifier si les images ont été chargées correctement
+    if img1 is None or img2 is None:
+        print("Erreur : Impossible de charger les images.")
+        return
 
-# Application des homographies
-rectified_img1 = apply_homography(img1, H1)
-rectified_img2 = apply_homography(img2, H2)
+    # Convertir en RGB pour affichage correct avec matplotlib
+    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
 
-cv2.imshow("Image 1 Rectifiée", rectified_img1)
-cv2.imshow("Image 2 Rectifiée", rectified_img2)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    # Dimensions de l'image
+    h, w, _ = img1.shape
+
+    R_rect=rectified_coord_system()
+
+    H1,H2 = compute_homographie(R_rect)
+
+    # Application des homographies
+    img1_rectified = warp_image(img1, H1, (w, h))
+    img2_rectified = warp_image(img2, H2, (w, h))
+
+
+    # Affichage des images avant et après rectification
+    plt.figure(figsize=(10, 5))
+    plt.subplot(2, 2, 1)
+    plt.imshow(img1, cmap='gray')
+    plt.title("Image Gauche Originale")
+
+    plt.subplot(2, 2, 2)
+    plt.imshow(img2, cmap='gray')
+    plt.title("Image Droite Originale")
+
+    plt.subplot(2, 2, 3)
+    plt.imshow(img1_rectified, cmap='gray')
+    plt.title("Image Gauche Rectifiée")
+
+    plt.subplot(2, 2, 4)
+    plt.imshow(img2_rectified, cmap='gray')
+    plt.title("Image Droite Rectifiée")
+
+    plt.show()
+
+if __name__ == "__main__":
+    main()
