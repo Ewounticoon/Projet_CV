@@ -1,0 +1,10 @@
+^C:\USERS\EWENG\ONEDRIVE\ESIREM\4EME ANNÉE\COMPUTER VISION\PROJET_CV\PROJET_CV\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/eweng/OneDrive/ESIREM/4eme Année/Computer vision/Projet_CV/Projet_CV" "-BC:/Users/eweng/OneDrive/ESIREM/4eme Année/Computer vision/Projet_CV/Projet_CV/build" --check-stamp-file "C:/Users/eweng/OneDrive/ESIREM/4eme Année/Computer vision/Projet_CV/Projet_CV/build/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

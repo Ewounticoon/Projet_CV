@@ -1,0 +1,10 @@
+^C:\USERS\EWENG\ONEDRIVE\ESIREM\4EME ANNÉE\COMPUTER VISION\PROJET_CV\PROJET_CV\BUILD\CMAKEFILES\D90BDFD0346DF0686C7635924BF81606\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/eweng/OneDrive/ESIREM/4eme Année/Computer vision/Projet_CV/Projet_CV" "-BC:/Users/eweng/OneDrive/ESIREM/4eme Année/Computer vision/Projet_CV/Projet_CV/build" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/eweng/OneDrive/ESIREM/4eme Année/Computer vision/Projet_CV/Projet_CV/build/StereoRectification.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
