@@ -2,8 +2,8 @@ import cv2
 import matplotlib.pyplot as plt
 
 # 1. Lire les images rectifiées
-imgL = cv2.imread("img1_rectified.png", cv2.IMREAD_GRAYSCALE)
-imgR = cv2.imread("img2_rectified.png", cv2.IMREAD_GRAYSCALE)
+imgL=None
+imgR=None
 
 # 2. Détection des points-clés et descripteurs (ex : ORB)
 orb = cv2.ORB_create(nfeatures=1000)

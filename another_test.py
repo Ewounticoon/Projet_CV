@@ -29,12 +29,12 @@ for fnameL, fnameR in zip(images_left, images_right):
         imgpointsR.append(cv.cornerSubPix(grayR, cornersR, (11,11), (-1,-1), criteria))
 
 if len(objpoints) > 0:
-    _, mtxL, distL, _, _ = cv.calibrateCamera(objpoints, imgpointsL, grayL.shape[::-1], None, None)
-    _, mtxR, distR, _, _ = cv.calibrateCamera(objpoints, imgpointsR, grayR.shape[::-1], None, None)
+    _, K1, distL, _, _ = cv.calibrateCamera(objpoints, imgpointsL, grayL.shape[::-1], None, None)
+    _, K2, distR, _, _ = cv.calibrateCamera(objpoints, imgpointsR, grayR.shape[::-1], None, None)
     _, _, _, _, _, R, T, _, _ = cv.stereoCalibrate(objpoints, imgpointsL, imgpointsR, mtxL, distL, mtxR, distR, grayL.shape[::-1], criteria=criteria, flags=cv.CALIB_FIX_INTRINSIC)
-    print("Matrice intrinsèque gauche:\n", mtxL)
+    print("Matrice intrinsèque gauche:\n", K1)
     print("Distorsion gauche:\n", distL)
-    print("Matrice intrinsèque droite:\n", mtxR)
+    print("Matrice intrinsèque droite:\n", K2)
     print("Distorsion droite:\n", distR)
     print("Rotation:\n", R)
     print("Translation:\n", T)

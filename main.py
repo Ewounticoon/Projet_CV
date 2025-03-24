@@ -5,24 +5,63 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import cv2
+import glob
 
-# Matrices intrinsèques des caméras
-K1 = np.array([[1758.23, 0, 953.34], 
-               [0, 1758.23, 552.29], 
-               [0, 0, 1]])
 
-K2 = np.array([[1758.23, 0, 953.34], 
-               [0, 1758.23, 552.29], 
-               [0, 0, 1]])
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+objp = np.zeros((9 * 7, 3), np.float32)
+objp[:, :2] = np.mgrid[0:9, 0:7].T.reshape(-1, 2)
+
+objpoints = []
+imgpointsL, imgpointsR = [], []
+
+images_left = sorted(glob.glob('Projet_CV/calibration_images/left_*.jpg'))
+images_right = sorted(glob.glob('Projet_CV/calibration_images/right_*.jpg'))
+
+for fnameL, fnameR in zip(images_left, images_right):
+    imgL, imgR = cv2.imread(fnameL), cv2.imread(fnameR)
+    if imgL is None or imgR is None:
+        continue
+    grayL, grayR = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY), cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+
+    retL, cornersL = cv2.findChessboardCorners(grayL, (9,7), None)
+    retR, cornersR = cv2.findChessboardCorners(grayR, (9,7), None)
+
+    if retL and retR:
+        objpoints.append(objp)
+        imgpointsL.append(cv2.cornerSubPix(grayL, cornersL, (11,11), (-1,-1), criteria))
+        imgpointsR.append(cv2.cornerSubPix(grayR, cornersR, (11,11), (-1,-1), criteria))
+
+if len(objpoints) > 0:
+    _, K1, distL, _, _ = cv2.calibrateCamera(objpoints, imgpointsL, grayL.shape[::-1], None, None)
+    _, K2, distR, _, _ = cv2.calibrateCamera(objpoints, imgpointsR, grayR.shape[::-1], None, None)
+    _, _, _, _, _, R, T, _, _ = cv2.stereoCalibrate(objpoints, imgpointsL, imgpointsR, K1, distL, K2, distR, grayL.shape[::-1], criteria=criteria, flags=cv2.CALIB_FIX_INTRINSIC)
+    print("Matrice intrinsèque gauche:\n", K1)
+    print("Distorsion gauche:\n", distL)
+    print("Matrice intrinsèque droite:\n", K2)
+    print("Distorsion droite:\n", distR)
+    print("Rotation:\n", R)
+    print("Translation:\n", T)
+
+
+## Matrices intrinsèques des caméras
+#K1 = np.array([[1758.23, 0, 953.34], 
+#               [0, 1758.23, 552.29], 
+#               [0, 0, 1]])
+#
+#K2 = np.array([[1758.23, 0, 953.34], 
+#               [0, 1758.23, 552.29], 
+#               [0, 0, 1]])
 
 # Définition de la baseline et des matrices de rotation
-baseline=111.53
-
-R1 = np.eye(3)  # Rotation identité pour la caméra 1
-R2 = np.eye(3)  # Supposons que la caméra 2 est aussi alignée
-
-# Vecteur translation (baseline le long de l'axe x)
-T = np.array([baseline, 0, 0])
+#baseline=111.53
+#
+#R1 = np.eye(3)  # Rotation identité pour la caméra 1
+#R2 = np.eye(3)  # Supposons que la caméra 2 est aussi alignée
+#
+## Vecteur translation (baseline le long de l'axe x)
+#T = np.array([baseline, 0, 0])
 
 
 img1 = cv2.imread('chess1/im0.png', 1)
@@ -87,7 +126,7 @@ def match_features_bf(desc1, desc2, method='sift'):
 
 
 # 🔹 Fonction pour calculer la carte de disparité
-def compute_disparity_map(imgL, imgR, ndisp):
+def compute_disparity_map(imgL, imgR):
     """
     Compute disparity map from stereo images.
     """
@@ -268,9 +307,8 @@ def main():
 
     imgL = cv2.equalizeHist(gray1)
     imgR = cv2.equalizeHist(gray2)
-    ndisp=290
 
-    disparity_map = compute_disparity_map(imgL, imgR, ndisp)
+    disparity_map = compute_disparity_map(imgL, imgR)
 
 ##################
 
