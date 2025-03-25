@@ -31,7 +31,7 @@ for fnameL, fnameR in zip(images_left, images_right):
 if len(objpoints) > 0:
     _, K1, distL, _, _ = cv.calibrateCamera(objpoints, imgpointsL, grayL.shape[::-1], None, None)
     _, K2, distR, _, _ = cv.calibrateCamera(objpoints, imgpointsR, grayR.shape[::-1], None, None)
-    _, _, _, _, _, R, T, _, _ = cv.stereoCalibrate(objpoints, imgpointsL, imgpointsR, mtxL, distL, mtxR, distR, grayL.shape[::-1], criteria=criteria, flags=cv.CALIB_FIX_INTRINSIC)
+    _, _, _, _, _, R, T, _, _ = cv.stereoCalibrate(objpoints, imgpointsL, imgpointsR, K1, distL, K2, distR, grayL.shape[::-1], criteria=criteria, flags=cv.CALIB_FIX_INTRINSIC)
     print("Matrice intrinsèque gauche:\n", K1)
     print("Distorsion gauche:\n", distL)
     print("Matrice intrinsèque droite:\n", K2)
