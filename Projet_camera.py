@@ -4,8 +4,8 @@ from tkinter import messagebox
 import os
 
 def capture_images():
-    cam_left = cv2.VideoCapture(0)  # Première caméra
-    cam_right = cv2.VideoCapture(1)  # Deuxième caméra
+    cam_left = cv2.VideoCapture(1)  # Première caméra
+    cam_right = cv2.VideoCapture(2)  # Deuxième caméra
     
     if not cam_left.isOpened() or not cam_right.isOpened():
         messagebox.showerror("Erreur", "Impossible d'ouvrir les caméras")
