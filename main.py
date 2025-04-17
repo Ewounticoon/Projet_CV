@@ -7,42 +7,43 @@ from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import glob
 
+def calibrate_camera():
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+    objp = np.zeros((9 * 7, 3), np.float32)
+    objp[:, :2] = np.mgrid[0:9, 0:7].T.reshape(-1, 2)
 
-objp = np.zeros((9 * 7, 3), np.float32)
-objp[:, :2] = np.mgrid[0:9, 0:7].T.reshape(-1, 2)
+    objpoints = []
+    imgpointsL, imgpointsR = [], []
 
-objpoints = []
-imgpointsL, imgpointsR = [], []
+    images_left = sorted(glob.glob('calibration_images_files/left_*.jpg'))
+    images_right = sorted(glob.glob('calibration_images_files/right_*.jpg'))
 
-images_left = sorted(glob.glob('Projet_CV/calibration_images/left_*.jpg'))
-images_right = sorted(glob.glob('Projet_CV/calibration_images/right_*.jpg'))
+    for fnameL, fnameR in zip(images_left, images_right):
+        imgL, imgR = cv2.imread(fnameL), cv2.imread(fnameR)
+        if imgL is None or imgR is None:
+            continue
+        grayL, grayR = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY), cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
 
-for fnameL, fnameR in zip(images_left, images_right):
-    imgL, imgR = cv2.imread(fnameL), cv2.imread(fnameR)
-    if imgL is None or imgR is None:
-        continue
-    grayL, grayR = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY), cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+        retL, cornersL = cv2.findChessboardCorners(grayL, (9,7), None)
+        retR, cornersR = cv2.findChessboardCorners(grayR, (9,7), None)
 
-    retL, cornersL = cv2.findChessboardCorners(grayL, (9,7), None)
-    retR, cornersR = cv2.findChessboardCorners(grayR, (9,7), None)
+        if retL and retR:
+            objpoints.append(objp)
+            imgpointsL.append(cv2.cornerSubPix(grayL, cornersL, (11,11), (-1,-1), criteria))
+            imgpointsR.append(cv2.cornerSubPix(grayR, cornersR, (11,11), (-1,-1), criteria))
 
-    if retL and retR:
-        objpoints.append(objp)
-        imgpointsL.append(cv2.cornerSubPix(grayL, cornersL, (11,11), (-1,-1), criteria))
-        imgpointsR.append(cv2.cornerSubPix(grayR, cornersR, (11,11), (-1,-1), criteria))
-
-if len(objpoints) > 0:
-    _, K1, distL, _, _ = cv2.calibrateCamera(objpoints, imgpointsL, grayL.shape[::-1], None, None)
-    _, K2, distR, _, _ = cv2.calibrateCamera(objpoints, imgpointsR, grayR.shape[::-1], None, None)
-    _, _, _, _, _, R, T, _, _ = cv2.stereoCalibrate(objpoints, imgpointsL, imgpointsR, K1, distL, K2, distR, grayL.shape[::-1], criteria=criteria, flags=cv2.CALIB_FIX_INTRINSIC)
-    print("Matrice intrinsèque gauche:\n", K1)
-    print("Distorsion gauche:\n", distL)
-    print("Matrice intrinsèque droite:\n", K2)
-    print("Distorsion droite:\n", distR)
-    print("Rotation:\n", R)
-    print("Translation:\n", T)
+    if len(objpoints) > 0:
+        _, K1, distL, _, _ = cv2.calibrateCamera(objpoints, imgpointsL, grayL.shape[::-1], None, None)
+        _, K2, distR, _, _ = cv2.calibrateCamera(objpoints, imgpointsR, grayR.shape[::-1], None, None)
+        _, _, _, _, _, R, T, _, _ = cv2.stereoCalibrate(objpoints, imgpointsL, imgpointsR, K1, distL, K2, distR, grayL.shape[::-1], criteria=criteria, flags=cv2.CALIB_FIX_INTRINSIC)
+        print("Matrice intrinsèque gauche:\n", K1)
+        print("Distorsion gauche:\n", distL)
+        print("Matrice intrinsèque droite:\n", K2)
+        print("Distorsion droite:\n", distR)
+        print("Rotation:\n", R)
+        print("Translation:\n", T)
+    return K1, K2, R, T
 
 
 ## Matrices intrinsèques des caméras
@@ -64,8 +65,8 @@ if len(objpoints) > 0:
 #T = np.array([baseline, 0, 0])
 
 
-img1 = cv2.imread('chess1/im0.png', 1)
-img2 = cv2.imread('chess1/im1.png', 1)
+img1 = cv2.imread('Taken_photos/photo_left.jpg', 1)
+img2 = cv2.imread('Taken_photos/photo_right.jpg', 1)
 
 # Vérifier si les images ont été chargées correctement
 if img1 is None or img2 is None:
@@ -204,9 +205,12 @@ def visualize_point_cloud(points_3D, colors):
     o3d.visualization.draw_geometries([point_cloud])
 
 def main():
+    K1,K2,R,T=calibrate_camera()
+    T = np.array([-15.27075501, -25.26244818, 102.40720507])
+    print(T)
     # Dimensions de l'image
     R1 = np.eye(3)  # Rotation identité pour la caméra 1
-    R2 = np.eye(3)  # Supposons que la caméra 2 est aussi alignée
+    R2 = R  # Supposons que la caméra 2 est aussi alignée
     rectif_image=Rectif_Stereo(K1,K2,R1,R2,T)
     h, w, _ = img1.shape
     R_rect=rectif_image.rectified_coord_system()
@@ -216,7 +220,7 @@ def main():
     img1_rectified = rectif_image.warp_image(img1, H1, (w, h))
     img2_rectified = rectif_image.warp_image(img2, H2, (w, h))
 
-
+    rectif_image.draw_epipolar_lines(img1_rectified, img2_rectified, num_lines=10)
 ###### FEATURE MATCHING #######
     keypoints1, descriptors1 = detect_features_sift(img1_rectified)
     keypoints2, descriptors2 = detect_features_sift(img2_rectified)
@@ -309,7 +313,7 @@ def main():
     imgR = cv2.equalizeHist(gray2)
 
     disparity_map = compute_disparity_map(imgL, imgR)
-
+    cv2.imshow("Disparity Map (Color)", disparity_map)
 ##################
 
     height_map = create_height_map(disparity_map, scale=0.5)
@@ -324,7 +328,7 @@ def main():
     # Reconstruction from cloud point 3d
     points_3D = reconstruct_3D(disparity_map, Q)
 
-    color_img = cv2.imread("chess1/im0.png")
+    color_img = cv2.imread("Taken_photos/photo_left.jpg")
     color_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
 
 

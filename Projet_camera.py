@@ -4,14 +4,14 @@ from tkinter import messagebox
 import os
 
 def capture_images():
-    cam_left = cv2.VideoCapture(0)  # Première caméra
-    cam_right = cv2.VideoCapture(1)  # Deuxième caméra
+    cam_left = cv2.VideoCapture(1)  # Première caméra
+    cam_right = cv2.VideoCapture(2)  # Deuxième caméra
     
     if not cam_left.isOpened() or not cam_right.isOpened():
         messagebox.showerror("Erreur", "Impossible d'ouvrir les caméras")
         return
     
-    save_path = "calibration_images"
+    save_path = "calibration_images_files"
     os.makedirs(save_path, exist_ok=True)
     
     messagebox.showinfo("Instructions", "Placez le banc face au damier en 5 positions différentes.\nAppuyez sur ESPACE après chaque position.")
