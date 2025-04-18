@@ -1,4 +1,3 @@
-# 
 from calibration.calibration import calibrate_camera
 from rectification.StereoRectification_StepbyStep import Rectif_Stereo
 from matching.feature_matching import detect_features_sift, match_features_bf, plot_matches

@@ -10,7 +10,7 @@ def capture_images():
     if not cam_left.isOpened() or not cam_right.isOpened():
         messagebox.showerror("Erreur", "Impossible d'ouvrir les caméras")
         return
-    
+
     save_path = "calibration_images_files"
     os.makedirs(save_path, exist_ok=True)
     
