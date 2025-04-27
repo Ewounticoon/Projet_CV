@@ -148,7 +148,9 @@ def main():
 
     image_size = (img1.shape[1], img1.shape[0])
 
-    R1, R2, P1, P2, Q = rectif_image.stereo_rectify(K1, K2, R1, T, image_size)
+    #R1, R2, P1, P2, Q = rectif_image.stereo_rectify(K1, K2, R1, T, image_size)
+
+    Q=rectif_image.compute_Q(K1,111.53)
 
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -158,6 +160,7 @@ def main():
 
     disparity_map = compute_disparity_map(imgL, imgR)
     cv2.imshow("Disparity Map (Color)", disparity_map)
+    #cv2.imwrite("disparity_map.png", disparity_map)
 
 ##################
 
@@ -166,6 +169,7 @@ def main():
 ##################
 
     cv2.imshow("Height Map (Color)", height_map)
+    #cv2.imwrite("height_map.png", height_map)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()

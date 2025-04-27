@@ -98,6 +98,27 @@ class Rectif_Stereo():
          flags=cv2.CALIB_ZERO_DISPARITY, alpha=-1
       )
       return R1, R2, P1, P2, Q
+   
+   def compute_Q(self, K, B):
+      """
+      K : matrice intrinsèque (3x3)
+      B : baseline (en mm ou en m selon ton projet)
+      Suppose que on utilise la meme caméra
+      """
+      f = K[0, 0]  # Focale en pixels
+      cx = K[0, 2] # Centre optique en x
+      cy = K[1, 2] # Centre optique en y
+
+      Q = np.array([
+          [1, 0, 0, -cx],
+          [0, 1, 0, -cy],
+          [0, 0, 0,  f ],
+          [0, 0, -1/B, 0]
+      ], dtype=np.float64)
+
+      return Q
+
+
 
 def main():
    pass
