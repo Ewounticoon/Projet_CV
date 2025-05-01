@@ -15,7 +15,7 @@ objpoints = []  # Points 3D dans le monde réel
 imgpoints = []  # Points 2D détectés dans l'image
  
 # Chargement des images
-images = glob.glob('calibration_images_files/*.jpg')
+images = glob.glob('calibration_images_2/*.jpg')
 print(f"{len(images)} images trouvées.")
  
 # Dossier pour sauvegarder les résultats
