@@ -4,10 +4,10 @@ from tkinter import messagebox
 import os
 
 def capture_images():
-    cam_left = cv2.VideoCapture(1)  # Première caméra
-    cam_right = cv2.VideoCapture(2)  # Deuxième caméra
+    cam_left = cv2.VideoCapture(0)  # Première caméra
+    #cam_right = cv2.VideoCapture(2)  # Deuxième caméra
     
-    if not cam_left.isOpened() or not cam_right.isOpened():
+    if not cam_left.isOpened() :#or not cam_right.isOpened():
         messagebox.showerror("Erreur", "Impossible d'ouvrir les caméras")
         return
 
@@ -20,24 +20,24 @@ def capture_images():
         messagebox.showinfo("Position {}".format(i+1), "Placez le damier à la position {} et appuyez sur ESPACE".format(i+1))
         while True:
             ret_left, frame_left = cam_left.read()
-            ret_right, frame_right = cam_right.read()
-            if not ret_left or not ret_right:
+            #ret_right, frame_right = cam_right.read()
+            if not ret_left :#or not ret_right:
                 messagebox.showerror("Erreur", "Problème de capture vidéo")
                 return
             
-            combined = cv2.hconcat([frame_left, frame_right])
-            cv2.imshow("Prévisualisation - Appuyez sur ESPACE pour capturer", combined)
+            #combined = cv2.hconcat([frame_left, frame_right])
+            cv2.imshow("Prévisualisation - Appuyez sur ESPACE pour capturer", frame_left)
             
             key = cv2.waitKey(1)
             if key == 32:  # Touche ESPACE
                 cv2.imwrite(f"{save_path}/left_{i}.jpg", frame_left)
-                cv2.imwrite(f"{save_path}/right_{i}.jpg", frame_right)
+                #cv2.imwrite(f"{save_path}/right_{i}.jpg", frame_right)
                 break
     
     cam_left.release()
-    cam_right.release()
+    #cam_right.release()
     cv2.destroyAllWindows()
-    messagebox.showinfo("Terminé", "10 images capturées avec succès !")
+    messagebox.showinfo("Terminé", "5 images capturées avec succès !")
 
 # Interface utilisateur
 root = tk.Tk()

@@ -1,31 +1,38 @@
 import cv2
 import tkinter as tk
-from tkinter import messagebox
 import os
+from tkinter import messagebox
 
-def Prendre_Photo():
-    cam_gauche = cv2.VideoCapture(0)  
-    cam_droite = cv2.VideoCapture(1)
 
-    nom_enregistrement = "Photos prises"
-    os.makedirs(nom_enregistrement, exist_ok=True)
-    messagebox.showinfo("Instructions", "Placezle damier en 5 positions différentes.\n Et appuyez sur ESPACE après chaque position.")
+def Take_Photo():
+    cam_left = cv2.VideoCapture(1)  
+    cam_right = cv2.VideoCapture(2)
 
-    _, frame_gauche = cam_gauche.read()
-    _, frame_droite = cam_droite.read()
+    save_path = "Taken_photos"
+    os.makedirs(save_path, exist_ok=True)
+    messagebox.showinfo("Instructions", "Placez le banc face au damier en 5 positions différentes.\nAppuyez sur ESPACE après chaque position.")
+    while True :
+        ret_left, frame_left = cam_left.read()
+        ret_right, frame_right = cam_right.read()
+        if not ret_left or not ret_right:
+            messagebox.showerror("Erreur", "Problème de capture vidéo")
+            break
 
-    key = cv2.waitKey(1)
-    if key == 32:  # Touche ESPACE
-        cv2.imwrite(f"{nom_enregistrement}/photo_left.jpg", frame_gauche)
-        cv2.imwrite(f"{nom_enregistrement}/photo_right.jpg", frame_droite)
-    
-    cam_gauche.release()
-    cam_droite.release()
+        combined = cv2.hconcat([frame_left, frame_right])
+        cv2.imshow("Prévisualisation - Appuyez sur ESPACE pour capturer", combined)
+
+        key = cv2.waitKey(1)
+        if key == 32:  # Touche ESPACE
+            cv2.imwrite(f"{save_path}/photo_left.jpg", frame_left)
+            cv2.imwrite(f"{save_path}/photo_right.jpg", frame_right)
+        
+    cam_left.release()
+    cam_right.release()
     cv2.destroyAllWindows()
-    messagebox.showinfo("Terminé,les images ont été enregistrées avec succès !")
+    messagebox.showinfo("Terminé", "les images ont été capturées avec succès !")
 
 root = tk.Tk()
 root.title("Calibration Stéréo")
-bouton_calibrate = tk.Button(root, text="Lancer la calibration", command=Prendre_Photo())
-bouton_calibrate.pack(pady=20)
+btn_calibrate = tk.Button(root, text="Lancer la Calibration", command=Take_Photo(), font=("Arial", 14))
+btn_calibrate.pack(pady=20)
 root.mainloop()
